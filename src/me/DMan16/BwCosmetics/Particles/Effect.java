@@ -3,14 +3,17 @@ package me.DMan16.BwCosmetics.Particles;
 import java.util.function.Consumer;
 
 import org.bukkit.Location;
+import org.bukkit.Material;
 import org.bukkit.entity.LivingEntity;
 
 public class Effect {
 	public final String nameColors;
 	private final Consumer<Location> method;
+	public final Material materialGUI;
 	
-	public Effect(String nameColors, Consumer<Location> method) {
+	public Effect(String nameColors, Material materialGUI, Consumer<Location> method) {
 		this.nameColors = nameColors;
+		this.materialGUI = materialGUI;
 		this.method = method;
 	}
 	

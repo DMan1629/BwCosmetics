@@ -4,11 +4,13 @@ import java.util.ArrayList;
 
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
+import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
 import org.bukkit.attribute.Attribute;
 import org.bukkit.attribute.AttributeInstance;
 import org.bukkit.attribute.AttributeModifier;
 import org.bukkit.entity.EntityType;
+import org.bukkit.entity.Item;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.Villager;
@@ -17,6 +19,9 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityDeathEvent;
+import org.bukkit.event.inventory.InventoryPickupItemEvent;
+import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.persistence.PersistentDataType;
 
 import me.DMan16.BwCosmetics.Main;
@@ -26,6 +31,7 @@ import me.DMan16.BwCosmetics.Utils.Utils;
 
 public class EffectListener implements Listener {
 	public static NamespacedKey dummyKey = Utils.namespacedKey("test_dummy");
+	static NamespacedKey effectItemKey = Utils.namespacedKey("effect_item");
 	
 	boolean isTestDummy(LivingEntity entity) {
 		return entity != null && (entity instanceof Villager) && entity.getPersistentDataContainer().has(dummyKey,PersistentDataType.STRING);
@@ -35,6 +41,13 @@ public class EffectListener implements Listener {
 	public void onDummyDeath(EntityDeathEvent event) {
 		if (!isTestDummy(event.getEntity())) return;
 		event.setDroppedExp(0);
+	}
+	
+	@EventHandler
+	public void onPickup(InventoryPickupItemEvent event) {
+		try {
+			if (event.getItem().getItemStack().getItemMeta().getPersistentDataContainer().has(effectItemKey,PersistentDataType.STRING)) event.setCancelled(true);
+		} catch (Exception e) {}
 	}
 	
 	@EventHandler(ignoreCancelled = true, priority = EventPriority.LOWEST)
@@ -55,7 +68,18 @@ public class EffectListener implements Listener {
 		}
 		effect.display(event.getEntity());
 	}
-
+	
+	public static Item effectItemDrop(Material material, Location loc) {
+		if (material == null) return null;
+		ItemStack item = new ItemStack(material);
+		ItemMeta meta = item.getItemMeta();
+		meta.getPersistentDataContainer().set(effectItemKey,PersistentDataType.STRING,"");
+		item.setItemMeta(meta);
+		Item drop = loc.getWorld().dropItemNaturally(loc,item);
+		drop.setPickupDelay(Integer.MAX_VALUE);
+		return drop;
+	}
+	
 	public static void spawnTestDummy(Location loc) {
 		Villager dummy = (Villager) loc.getWorld().spawnEntity(loc,EntityType.VILLAGER);
 		dummy.setCustomName(Utils.chatColors("&6Test &bDummy"));
